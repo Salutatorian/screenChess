@@ -1,0 +1,6 @@
+node_modules/
+engine/*.exe
+public/app.js
+public/ort/
+public/models/
+public/fonts/

@@ -1,0 +1,11 @@
+{
+  "name": "relay",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "esbuild client/main.js --bundle --outfile=public/app.js --format=esm --target=es2022 --platform=browser --external:onnxruntime-web/wasm",
+    "start": "npm run build && node server.mjs",
+    "test": "node --test test/position.test.mjs test/engine.test.mjs"
+  }
+}

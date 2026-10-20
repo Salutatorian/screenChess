@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Relay — screen to Stockfish</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%2312100e' width='32' height='32'/%3E%3Crect x='6' y='6' width='9' height='9' fill='%23efe2c6'/%3E%3Crect x='15' y='6' width='9' height='9' fill='%23245c42'/%3E%3Crect x='6' y='15' width='9' height='9' fill='%23245c42'/%3E%3Crect x='15' y='15' width='9' height='9' fill='%23e0b15a'/%3E%3C/svg%3E" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <div class="brand">
+        <span class="lamp" id="lamp" aria-hidden="true"></span>
+        <div>
+          <p class="eyebrow">Local analysis desk</p>
+          <h1>Relay</h1>
+        </div>
+      </div>
+      <p class="lede">
+        Relay watches a shared window or a recording and places that board on this desk. Stockfish then searches the placed position and marks the move it prefers for the player at the bottom.
+      </p>
+      <p class="engine-id" id="engineId">Engine starting…</p>
+    </header>
+    <p class="notice">
+      Practice only. Use this to study a position with a friend, or to practice against an engine on your own. Cheating in a real game is not condoned.
+    </p>
+
+    <main>
+      <section class="monitor" aria-label="Screen source">
+        <div class="bezel">
+          <div class="screen" id="screen">
+            <video id="video" hidden playsinline muted></video>
+            <img id="still" alt="" hidden />
+            <canvas id="overlay"></canvas>
+            <div id="crop" hidden role="group" aria-label="Board frame">
+              <button type="button" class="handle nw" data-h="nw" aria-label="Resize top left"></button>
+              <button type="button" class="handle ne" data-h="ne" aria-label="Resize top right"></button>
+              <button type="button" class="handle sw" data-h="sw" aria-label="Resize bottom left"></button>
+              <button type="button" class="handle se" data-h="se" aria-label="Resize bottom right"></button>
+            </div>
+            <div class="empty-screen" id="emptyScreen">
+              <div>
+                <strong>Nothing on the glass.</strong>
+                <p>Share the chess window, drop a recording, or paste a screenshot.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bar">
+          <button type="button" class="primary" id="shareBtn">Share screen</button>
+          <button type="button" id="fileBtn">Open recording</button>
+          <input id="file" type="file" accept="video/*,image/*" hidden />
+          <button type="button" id="cropBtn" aria-pressed="false">Frame board</button>
+          <button type="button" id="liveBtn" aria-pressed="true">Live</button>
+        </div>
+        <p class="status" id="readStatus" aria-live="polite">Waiting for a picture.</p>
+        <dl class="meters">
+          <div>
+            <dt>Read</dt>
+            <dd id="conf">—</dd>
+          </div>
+          <div>
+            <dt>Turn</dt>
+            <dd id="sideLabel">—</dd>
+          </div>
+        </dl>
+        <p class="fine">Flat boards only. Share the game window so this page is not in the picture. If the outline misses, frame the squares yourself.</p>
+      </section>
+
+      <section class="desk" aria-label="Copied board">
+        <div class="board-wrap">
+          <div class="eval" id="eval" role="img" aria-label="No evaluation yet">
+            <div class="eval-fill" id="evalFill"></div>
+          </div>
+          <div id="board" class="board"></div>
+        </div>
+        <div class="callout">
+          <p class="eyebrow">Stockfish</p>
+          <p class="explain">Stockfish is searching the placed position and marking the move it likes for the player at the bottom.</p>
+          <p class="best" id="bestMove">—</p>
+          <p class="scoreline" id="scoreLine">Waiting for a position</p>
+          <div class="pv" id="pv"></div>
+          <div class="actions">
+            <button type="button" id="watchBtn" disabled>Play the line</button>
+            <button type="button" id="backBtn" hidden>Back to screen</button>
+          </div>
+          <div class="field">
+            <span>To move</span>
+            <div class="seg" id="turnSeg">
+              <button type="button" data-turn="w">White</button>
+              <button type="button" data-turn="b">Black</button>
+            </div>
+          </div>
+          <div class="field">
+            <span>Screen</span>
+            <div class="seg" id="orientSeg">
+              <button type="button" data-orient="auto">Auto</button>
+              <button type="button" data-orient="white">White below</button>
+              <button type="button" data-orient="black">Black below</button>
+            </div>
+          </div>
+          <label class="depth">
+            Depth
+            <input id="depth" type="range" min="8" max="24" step="1" value="16" />
+            <span id="depthVal">16</span>
+          </label>
+        </div>
+      </section>
+    </main>
+    <footer>
+      <p>
+        <strong>Stockfish</strong> does the chess. It is a free, open-source engine by the Stockfish developers, published under the GNU GPL. The evaluation, the chosen move, and the line are Stockfish’s.
+        <a href="https://stockfishchess.org">stockfishchess.org</a>
+      </p>
+      <p>
+        <strong>Relay</strong>, by Salutatorian, does the recording and the placement. It reads the shared window or the video and puts that position on this board.
+      </p>
+      <p>Reading the squares uses <a href="https://github.com/scoriiu/fenshot">fenshot</a>.</p>
+    </footer>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "onnxruntime-web/wasm": "/ort/ort.wasm.bundle.min.mjs"
+        }
+      }
+    </script>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>
