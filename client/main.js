@@ -770,7 +770,7 @@ async function checkAssets() {
     fetch("/models/chess-tiles-v2.onnx"),
     fetch("/ort/ort-wasm-simd-threaded.wasm"),
   ]);
-  if (!model.ok || !wasm.ok) setStatus("The board reader files are missing. Restart Relay.", "warn");
+  if (!model.ok || !wasm.ok) setStatus("The board reader files are missing. Restart screenChess.", "warn");
 }
 
 async function probeReader() {
@@ -792,7 +792,7 @@ async function probeReader() {
 }
 
 if (!crossOriginIsolated) {
-  setStatus("Open this page from the Relay server so the board reader can start.", "warn");
+  setStatus("Open this page from the screenChess server so the board reader can start.", "warn");
 } else {
   probeReader();
 }

@@ -131,9 +131,9 @@ sockets.on("connection", (socket) => {
 
 const port = Number(process.env.PORT) || 4173;
 server.listen(port, "0.0.0.0", () => {
-  console.log(`Relay is at http://localhost:${port}`);
+  console.log(`screenChess is at http://localhost:${port}`);
   if (!fs.existsSync(path.join(publicDir, "app.js"))) {
-    console.warn("public/app.js is missing. Start Relay with npm start so the page script is built.");
+    console.warn("public/app.js is missing. Start screenChess with npm start so the page script is built.");
   }
 });
 

@@ -87,11 +87,11 @@ export function createBoard(root) {
     <div class="pieces"></div>
     <svg class="arrows" viewBox="0 0 8 8" aria-hidden="true">
       <defs>
-        <marker id="relayArrow" markerWidth="3.2" markerHeight="3.2" refX="1.2" refY="1.6" orient="auto">
+        <marker id="screenArrow" markerWidth="3.2" markerHeight="3.2" refX="1.2" refY="1.6" orient="auto">
           <path d="M0 0 L3.2 1.6 L0 3.2 Z" fill="#ff5a36"></path>
         </marker>
       </defs>
-      <path class="shaft" marker-end="url(#relayArrow)"></path>
+      <path class="shaft" marker-end="url(#screenArrow)"></path>
     </svg>
   `;
   const squares = root.querySelector(".squares");
