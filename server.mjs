@@ -1,48 +1,32 @@
 import fs from "node:fs";
 import http from "node:http";
 import path from "node:path";
+import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import express from "express";
 import { WebSocketServer } from "ws";
+import { copyWebAssets } from "./assets.mjs";
 import { openStockfish } from "./engine.mjs";
+import { embeddedAppRoot } from "./payload.mjs";
 
-const root = path.dirname(fileURLToPath(import.meta.url));
+const extracted = embeddedAppRoot();
+const root = extracted ?? path.dirname(fileURLToPath(import.meta.url));
+const packaged = extracted != null;
 const publicDir = path.join(root, "public");
 const exe = path.join(root, "engine", "stockfish.exe");
 
-function copyFile(from, to) {
-  fs.mkdirSync(path.dirname(to), { recursive: true });
-  if (fs.existsSync(to) && fs.statSync(to).size === fs.statSync(from).size) return;
-  fs.copyFileSync(from, to);
+if (fs.existsSync(path.join(root, "node_modules", "onnxruntime-web"))) {
+  copyWebAssets(root);
 }
 
-function copyAssets() {
-  const ort = path.join(root, "node_modules", "onnxruntime-web", "dist");
-  for (const name of [
-    "ort.wasm.bundle.min.mjs",
-    "ort-wasm-simd-threaded.mjs",
-    "ort-wasm-simd-threaded.wasm",
-  ]) {
-    copyFile(path.join(ort, name), path.join(publicDir, "ort", name));
-  }
-  copyFile(
-    path.join(root, "node_modules", "@scoriiu", "fenshot", "model", "chess-tiles-v2.onnx"),
-    path.join(publicDir, "models", "chess-tiles-v2.onnx"),
-  );
-  const fonts = path.join(root, "node_modules", "@fontsource");
-  const faces = [
-    ["fraunces", "fraunces-latin-500-normal.woff2"],
-    ["fraunces", "fraunces-latin-600-normal.woff2"],
-    ["fraunces", "fraunces-latin-700-normal.woff2"],
-    ["barlow", "barlow-latin-400-normal.woff2"],
-    ["barlow", "barlow-latin-500-normal.woff2"],
-    ["barlow", "barlow-latin-600-normal.woff2"],
-    ["ibm-plex-mono", "ibm-plex-mono-latin-400-normal.woff2"],
-    ["ibm-plex-mono", "ibm-plex-mono-latin-500-normal.woff2"],
-  ];
-  for (const [family, file] of faces) {
-    copyFile(path.join(fonts, family, "files", file), path.join(publicDir, "fonts", file));
-  }
+function openBrowser(url) {
+  if (process.platform !== "win32" || process.env.SCREENCHESS_NO_BROWSER === "1") return;
+  const child = spawn("cmd", ["/c", "start", "", url], {
+    detached: true,
+    stdio: "ignore",
+    windowsHide: true,
+  });
+  child.unref();
 }
 
 function clamp(value, min, max, fallback) {
@@ -50,8 +34,6 @@ function clamp(value, min, max, fallback) {
   if (!Number.isFinite(n)) return fallback;
   return Math.min(max, Math.max(min, Math.round(n)));
 }
-
-copyAssets();
 
 const engine = openStockfish(exe);
 let engineName = null;
@@ -129,13 +111,43 @@ sockets.on("connection", (socket) => {
   });
 });
 
-const port = Number(process.env.PORT) || 4173;
-server.listen(port, "0.0.0.0", () => {
-  console.log(`screenChess is at http://localhost:${port}`);
+const portFromEnv = process.env.PORT;
+let port = Number(portFromEnv) || 4173;
+const firstPort = port;
+
+function announce() {
+  const url = `http://localhost:${port}`;
+  if (packaged) {
+    process.title = "screenChess";
+    console.log("");
+    console.log("screenChess");
+    console.log("Practice only. Cheating in a real game is not condoned.");
+    console.log("Stockfish does the chess. It is included under the GNU GPL.");
+    console.log("Source: https://github.com/official-stockfish/Stockfish");
+    console.log(`License: ${path.join(root, "STOCKFISH-COPYING.txt")}`);
+    console.log("");
+    console.log("Leave this window open. Close it to quit.");
+    console.log(url);
+    openBrowser(url);
+    return;
+  }
+  console.log(`screenChess is at ${url}`);
   if (!fs.existsSync(path.join(publicDir, "app.js"))) {
     console.warn("public/app.js is missing. Start screenChess with npm start so the page script is built.");
   }
+}
+
+server.on("error", (err) => {
+  if (packaged && !portFromEnv && err.code === "EADDRINUSE" && port < firstPort + 20) {
+    port += 1;
+    server.listen(port, "0.0.0.0");
+    return;
+  }
+  console.error(err.message);
+  process.exit(1);
 });
+
+server.listen(port, "0.0.0.0", announce);
 
 function shutdown() {
   engine.close();

@@ -6,6 +6,21 @@
   "scripts": {
     "build": "esbuild client/main.js --bundle --outfile=public/app.js --format=esm --target=es2022 --platform=browser --external:onnxruntime-web/wasm",
     "start": "npm run build && node server.mjs",
+    "exe": "node scripts/build-exe.mjs",
     "test": "node --test test/position.test.mjs test/engine.test.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/barlow": "5.3.0",
+    "@fontsource/fraunces": "5.3.0",
+    "@fontsource/ibm-plex-mono": "5.3.0",
+    "esbuild": "0.28.2",
+    "postject": "1.0.0-alpha.6"
+  },
+  "dependencies": {
+    "@scoriiu/fenshot": "0.1.5",
+    "chess.js": "1.4.0",
+    "express": "5.3.0",
+    "onnxruntime-web": "1.30.0",
+    "ws": "8.22.0"
   }
 }

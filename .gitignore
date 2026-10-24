@@ -4,3 +4,6 @@ public/app.js
 public/ort/
 public/models/
 public/fonts/
+build/
+dist/
+pack-sea-test/

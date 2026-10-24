@@ -8,7 +8,7 @@ Use screenChess to study a position with a friend, or to practice against an eng
 
 ## Who did what
 
-**Stockfish** does the chess. It is a free, open-source chess engine by the Stockfish developers, published under the [GNU GPL](https://www.gnu.org/licenses/gpl-3.0.html). The evaluation bar, the move, and the line all come from Stockfish. screenChess did not write the engine, and this repository does not include it.
+**Stockfish** does the chess. It is a free, open-source chess engine by the Stockfish developers, published under the [GNU GPL](https://www.gnu.org/licenses/gpl-3.0.html). The evaluation bar, the move, and the line all come from Stockfish. screenChess did not write the engine. The git repository does not include the Stockfish program. The Windows download does, still as Stockfish’s own program, under that same license.
 
 - https://stockfishchess.org
 - https://github.com/official-stockfish/Stockfish
@@ -17,7 +17,13 @@ Use screenChess to study a position with a friend, or to practice against an eng
 
 Reading the squares uses [fenshot](https://github.com/scoriiu/fenshot).
 
-## Run it
+## Windows download
+
+People on Windows can download [screenChess.exe](https://github.com/Salutatorian/screenChess/releases/latest) and double-click it. Leave the window open. It opens the board in the browser. Close the window to quit.
+
+No Node install. The first launch unpacks the app, which can take a minute. Stockfish is inside that file and remains credited above.
+
+## Run from source
 
 ```bash
 npm install
