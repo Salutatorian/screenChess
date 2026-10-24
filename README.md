@@ -19,7 +19,9 @@ Reading the squares uses [fenshot](https://github.com/scoriiu/fenshot).
 
 ## Recording
 
-A practice recording is included: [demo/recording-2026-10-24.mp4](demo/recording-2026-10-24.mp4).
+A practice recording:
+
+https://github.com/user-attachments/assets/9c614be3-dfbd-4e11-9cd3-03fad0501b50
 
 ## Windows download
 
