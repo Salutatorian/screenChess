@@ -17,6 +17,10 @@ Use screenChess to study a position with a friend, or to practice against an eng
 
 Reading the squares uses [fenshot](https://github.com/scoriiu/fenshot).
 
+## Recording
+
+A practice recording is included: [demo/recording-2026-10-24.mp4](demo/recording-2026-10-24.mp4).
+
 ## Windows download
 
 People on Windows can download [screenChess.exe](https://github.com/Salutatorian/screenChess/releases/latest) and double-click it. Leave the window open. It opens the board in the browser. Close the window to quit.
