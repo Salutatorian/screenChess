@@ -35,24 +35,45 @@ function clamp(value, min, max, fallback) {
   return Math.min(max, Math.max(min, Math.round(n)));
 }
 
-const engine = openStockfish(exe);
+let engine = null;
 let engineName = null;
 let engineError = null;
-const engineReady = engine.ready
-  .then((info) => {
-    engineName = info.name;
-    console.log(`${info.name} · ${info.threads} threads`);
-    return info;
-  })
-  .catch((err) => {
-    engineError = err;
-    console.error(err.message);
-    return null;
-  });
+let shuttingDown = false;
+let lastFen = null;
+let lastDepth = 16;
+let lastMultipv = 3;
+const fans = { info: new Set(), bestmove: new Set(), ready: new Set() };
 
-engine.on("exit", ({ code }) => {
-  if (code != null) console.error(`Stockfish exited (${code})`);
-});
+function attachEngine(next) {
+  engine = next;
+  next.ready
+    .then((info) => {
+      engineName = info.name;
+      engineError = null;
+      console.log(`${info.name} · ${info.threads} threads`);
+      for (const notify of fans.ready) notify(info);
+      if (lastFen) next.analyze(lastFen, { depth: lastDepth, multipv: lastMultipv });
+      return info;
+    })
+    .catch((err) => {
+      engineError = err;
+      console.error(err.message);
+      return null;
+    });
+  next.on("info", (msg) => {
+    for (const notify of fans.info) notify(msg);
+  });
+  next.on("bestmove", (msg) => {
+    for (const notify of fans.bestmove) notify(msg);
+  });
+  next.on("exit", ({ code }) => {
+    if (shuttingDown) return;
+    console.error(`Stockfish exited (${code}). Starting it again.`);
+    attachEngine(openStockfish(exe));
+  });
+}
+
+attachEngine(openStockfish(exe));
 
 const app = express();
 app.use((_req, res, next) => {
@@ -80,14 +101,12 @@ sockets.on("connection", (socket) => {
   };
   const onInfo = (msg) => send({ type: "info", ...msg });
   const onBest = (msg) => send({ type: "bestmove", ...msg });
-  const onExit = () => send({ type: "error", message: "Stockfish stopped." });
-  engine.on("info", onInfo);
-  engine.on("bestmove", onBest);
-  engine.on("exit", onExit);
-  engineReady.then((info) => {
-    if (info) send({ type: "ready", name: info.name });
-    else if (engineError) send({ type: "error", message: engineError.message });
-  });
+  const onReady = (info) => send({ type: "ready", name: info.name });
+  fans.info.add(onInfo);
+  fans.bestmove.add(onBest);
+  fans.ready.add(onReady);
+  if (engineName) onReady({ name: engineName });
+  else if (engineError) send({ type: "error", message: engineError.message });
   socket.on("message", (data) => {
     let msg;
     try {
@@ -96,18 +115,19 @@ sockets.on("connection", (socket) => {
       return;
     }
     if (msg?.type === "analyze" && typeof msg.fen === "string") {
-      engine.analyze(msg.fen, {
-        depth: clamp(msg.depth, 1, 40, 16),
-        multipv: clamp(msg.multipv, 1, 5, 3),
-      });
+      lastFen = msg.fen;
+      lastDepth = clamp(msg.depth, 1, 40, 16);
+      lastMultipv = clamp(msg.multipv, 1, 5, 3);
+      engine.analyze(msg.fen, { depth: lastDepth, multipv: lastMultipv });
     } else if (msg?.type === "stop") {
+      lastFen = null;
       engine.stop();
     }
   });
   socket.on("close", () => {
-    engine.off("info", onInfo);
-    engine.off("bestmove", onBest);
-    engine.off("exit", onExit);
+    fans.info.delete(onInfo);
+    fans.bestmove.delete(onBest);
+    fans.ready.delete(onReady);
   });
 });
 
@@ -150,6 +170,7 @@ server.on("error", (err) => {
 server.listen(port, "0.0.0.0", announce);
 
 function shutdown() {
+  shuttingDown = true;
   engine.close();
   server.close(() => process.exit(0));
   setTimeout(() => process.exit(0), 500).unref();
